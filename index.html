@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Number Grid & Stitch Diary</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <meta name="theme-color" content="#1e293b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 12px;
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    /* Top Header */
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .brand h1 { font-size: 18px; font-weight: 800; color: #1e293b; }
+    .brand p { font-size: 12px; color: var(--text-muted); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    
+    /* Navigation Bar */
+    .nav-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .folder-group { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+    select {
+      padding: 7px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+    .page-controls { display: flex; align-items: center; gap: 6px; }
+    .btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-default { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+    .btn-default:hover { background: #e2e8f0; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .page-indicator { font-weight: 700; font-size: 13px; padding: 0 6px; }
+
+    /* Column Width Expansion Toolbar */
+    .width-toolbar {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+    }
+    .width-toolbar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .width-toolbar-title { font-size: 13px; font-weight: 700; color: #1e40af; }
+    .slider-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .slider-box {
+      background: white;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #dbeafe;
+    }
+    .slider-box label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: #3b82f6;
+      margin-bottom: 4px;
+    }
+    .slider-box input[type="range"] { width: 100%; cursor: pointer; }
+
+    /* Production Table */
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .table-scroll { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; min-width: 860px; table-layout: fixed; }
+    th {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 10px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      text-align: left;
+      border-right: 1px solid #334155;
+    }
+    td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      vertical-align: top;
+      background: white;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      min-width: 90px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.4;
+      padding: 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      resize: both !important;
+      background: #fafafa;
+    }
+    textarea:focus { outline: none; border-color: var(--primary); background: #ffffff; }
+    tfoot tr { background: #f8fafc; font-weight: 800; font-family: monospace; font-size: 14px; }
+    tfoot td { padding: 10px 8px; border-top: 2px solid #cbd5e1; }
+
+    /* Bottom Action Bar */
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    /* Danger Zone */
+    .danger-zone {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .danger-zone h4 { color: #991b1b; font-size: 14px; font-weight: 800; }
+    .danger-zone p { color: #b91c1c; font-size: 12px; }
+
+    /* Backup Manager */
+    .backup-zone {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .backup-zone h4 { color: #166534; font-size: 14px; font-weight: 800; }
+    .backup-zone p { color: #15803d; font-size: 12px; }
+
+    /* PWA Install Banner */
+    #install-banner {
+      display: none;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- PWA Install Banner (Android) -->
+  <div id="install-banner">
+    <div>
+      <div style="font-weight:bold; font-size:14px;">📱 Install as Offline Android App</div>
+      <div style="font-size:12px; color:#cbd5e1;">Add directly to home screen for 100% offline access.</div>
+    </div>
+    <button class="btn btn-primary" id="install-btn">Install App Now</button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <h1>Number Grid & Stitch Diary</h1>
+      <p>Multi-folder shift production tracker & formulas</p>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span class="badge">● Offline Ready</span>
+      <button class="btn btn-default" onclick="toggleWidthToolbar()">⚙️ Column Widths</button>
+    </div>
+  </header>
+
+  <!-- Folder & Page Navigation -->
+  <div class="nav-bar">
+    <div class="folder-group">
+      <label for="folderSelect">Folder:</label>
+      <select id="folderSelect" onchange="switchFolder()">
+        <option value="Folder1">Folder 1</option>
+        <option value="Folder2">Folder 2</option>
+        <option value="Folder3">Folder 3</option>
+        <option value="Folder4">Folder 4</option>
+        <option value="Folder5">Folder 5</option>
+        <option value="Folder6">Folder 6</option>
+        <option value="Folder7">Folder 7</option>
+        <option value="Folder8">Folder 8</option>
+        <option value="Folder9">Folder 9</option>
+        <option value="Folder10">Folder 10</option>
+        <option value="Folder11">Folder 11</option>
+        <option value="Folder12">Folder 12</option>
+      </select>
+    </div>
+
+    <div class="page-controls">
+      <button class="btn btn-default" onclick="prevPage()">◀ Prev</button>
+      <span class="page-indicator">Page <span id="pageDisplay">1</span> / 100</span>
+      <button class="btn btn-default" onclick="nextPage()">Next ▶</button>
+      <input type="number" id="jumpPageInput" min="1" max="100" placeholder="Go" style="width:50px; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; text-align:center;">
+      <button class="btn btn-default" onclick="jumpPage()">Go</button>
+    </div>
+  </div>
+
+  <!-- Expandable Column Width Controls -->
+  <div class="width-toolbar" id="widthToolbar" style="display:none;">
+    <div class="width-toolbar-header">
+      <span class="width-toolbar-title">Column Width Adjustment (Pixels)</span>
+      <button class="btn btn-default" onclick="resetWidths()" style="padding:4px 8px; font-size:11px;">Reset Default</button>
+    </div>
+    <div class="slider-grid">
+      <div class="slider-box">
+        <label><span>Date Col:</span> <span id="w0-val">140px</span></label>
+        <input type="range" min="100" max="300" id="slider-col-0" oninput="updateColWidth(0, this.value)">
+      </div>
+      <div class="slider-box">
+        <label><span>Round Col:</span> <span id="w1-val">160px</span></label>
+        <input type="range" min="100" max="350" id="slider-col-1" oninput="updateColWidth(1, this.value)">
+      </div>
+      <div class="slider-box">
+        <label><span>Current Col:</span> <span id="w2-val">160px</span></label>
+        <input type="range" min="100" max="350" id="slider-col-2" oninput="updateColWidth(2, this.value)">
+      </div>
+      <div class="slider-box">
+        <label><span>Stitch Col:</span> <span id="w3-val">180px</span></label>
+        <input type="range" min="100" max="350" id="slider-col-3" oninput="updateColWidth(3, this.value)">
+      </div>
+      <div class="slider-box">
+        <label><span>Color Col:</span> <span id="w4-val">140px</span></label>
+        <input type="range" min="100" max="350" id="slider-col-4" oninput="updateColWidth(4, this.value)">
+      </div>
+      <div class="slider-box">
+        <label><span>Name / Extra:</span> <span id="w5-val">180px</span></label>
+        <input type="range" min="100" max="400" id="slider-col-5" oninput="updateColWidth(5, this.value)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+    <div class="table-scroll">
+      <table id="mainTable">
+        <colgroup>
+          <col id="col-0" style="width:140px;">
+          <col id="col-1" style="width:160px;">
+          <col id="col-2" style="width:160px;">
+          <col id="col-3" style="width:180px;">
+          <col id="col-4" style="width:140px;">
+          <col id="col-5" style="width:180px;">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Date & Notes</th>
+            <th>Round</th>
+            <th>Current</th>
+            <th>Stitch</th>
+            <th>Color</th>
+            <th>Name / Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <input type="date" id="dateInput" style="width:100%; padding:6px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:6px;">
+              <textarea id="cellNotes" placeholder="Notes (Shift, Operator...)" style="min-height:55px;"></textarea>
+            </td>
+            <td><textarea id="col1" oninput="calculate()"></textarea></td>
+            <td><textarea id="col2" oninput="calculate()"></textarea></td>
+            <td><textarea id="col3" oninput="calculate()"></textarea></td>
+            <td><textarea id="col4" oninput="calculate()"></textarea></td>
+            <td><textarea id="col5" oninput="calculate()"></textarea></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td style="color:#475569;">TOTALS</td>
+            <td id="tot1">0</td>
+            <td id="tot2">0</td>
+            <td id="tot3">0</td>
+            <td id="tot4">0</td>
+            <td id="tot5">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="actions-bar">
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-success" onclick="savePage()">💾 Save Changes</button>
+        <button class="btn btn-default" onclick="clearPage()">🗑️ Clear Page</button>
+      </div>
+      <span id="saveStatus" style="font-size:12px; color:#16a34a; font-weight:700;">All changes saved</span>
+    </div>
+  </div>
+
+  <!-- Backup & Restore Manager -->
+  <div class="backup-zone">
+    <div>
+      <h4>📦 Backup & Restore Manager</h4>
+      <p>Export all 12 folders and 100 pages to a single JSON file, or restore existing data.</p>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="btn btn-primary" onclick="exportBackup()">Export Backup (.json)</button>
+      <label class="btn btn-default" style="cursor:pointer; margin:0;">
+        Import Backup
+        <input type="file" id="importFileInput" accept=".json" onchange="importBackup(event)" style="display:none;">
+      </label>
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="danger-zone">
+    <div>
+      <h4>⚠️ Danger Zone (Caution!)</h4>
+      <p>Permanently deletes all data for the current active folder. Cannot be undone.</p>
+    </div>
+    <button class="btn btn-danger" onclick="deleteCurrentFolder()">Delete Full Current Folder</button>
+  </div>
+</div>
+
+<script>
+  let curFolder = "Folder1";
+  let curPage = 1;
+  const defaultWidths = [140, 160, 160, 180, 140, 180];
+  let colWidths = [...defaultWidths];
+
+  // Initialize
+  window.onload = function() {
+    loadSavedSettings();
+    loadPageData();
+    applyColWidths();
+  };
+
+  // Switch Folder
+  function switchFolder() {
+    savePage();
+    curFolder = document.getElementById("folderSelect").value;
+    curPage = 1;
+    document.getElementById("pageDisplay").innerText = curPage;
+    loadPageData();
+  }
+
+  // Next / Prev / Jump Page
+  function nextPage() {
+    if (curPage < 100) {
+      savePage();
+      curPage++;
+      document.getElementById("pageDisplay").innerText = curPage;
+      loadPageData();
+    }
+  }
+
+  function prevPage() {
+    if (curPage > 1) {
+      savePage();
+      curPage--;
+      document.getElementById("pageDisplay").innerText = curPage;
+      loadPageData();
+    }
+  }
+
+  function jumpPage() {
+    const val = parseInt(document.getElementById("jumpPageInput").value);
+    if (val >= 1 && val <= 100) {
+      savePage();
+      curPage = val;
+      document.getElementById("pageDisplay").innerText = curPage;
+      loadPageData();
+    }
+  }
+
+  // Calculation Engine
+  function calculate() {
+    let colValues = [];
+    for (let c = 1; c <= 5; c++) {
+      colValues.push(document.getElementById("col" + c).value);
+    }
+
+    let sums = [0, 0, 0, 0, 0];
+    let forwards = [0, 0, 0, 0, 0];
+    let deductions = [0, 0, 0, 0, 0];
+
+    for (let c = 0; c < 5; c++) {
+      let lines = colValues[c].split("\n");
+      for (let line of lines) {
+        line = line.trim();
+        if (!line || line.startsWith("+")) continue;
+
+        if (line.endsWith("+") && c < 4) {
+          let num = parseFloat(line.replace("+", "")) || 0;
+          forwards[c + 1] += num;
+        } else if (line.endsWith("-")) {
+          let num = parseFloat(line.replace("-", "")) || 0;
+          deductions[c] += num;
+        } else {
+          let num = parseFloat(line) || 0;
+          sums[c] += num;
+        }
+      }
+    }
+
+    for (let c = 0; c < 4; c++) {
+      sums[c + 1] += forwards[c + 1] - deductions[c];
+    }
+
+    for (let c = 0; c < 5; c++) {
+      document.getElementById("tot" + (c + 1)).innerText = sums[c].toLocaleString();
+    }
+
+    markUnsaved();
+  }
+
+  // Save / Load Page Data
+  function getStorageKey() {
+    return `${curFolder}_p_${curPage}`;
+  }
+
+  function savePage() {
+    const data = {
+      date: document.getElementById("dateInput").value,
+      notes: document.getElementById("cellNotes").value,
+      c1: document.getElementById("col1").value,
+      c2: document.getElementById("col2").value,
+      c3: document.getElementById("col3").value,
+      c4: document.getElementById("col4").value,
+      c5: document.getElementById("col5").value
+    };
+    localStorage.setItem(getStorageKey(), JSON.stringify(data));
+    localStorage.setItem("last_folder", curFolder);
+    localStorage.setItem("last_page", curPage);
+    document.getElementById("saveStatus").innerText = "All changes saved";
+    document.getElementById("saveStatus").style.color = "#16a34a";
+  }
+
+  function loadPageData() {
+    const raw = localStorage.getItem(getStorageKey());
+    if (raw) {
+      try {
+        const d = JSON.parse(raw);
+        document.getElementById("dateInput").value = d.date || "";
+        document.getElementById("cellNotes").value = d.notes || "";
+        document.getElementById("col1").value = d.c1 || "";
+        document.getElementById("col2").value = d.c2 || "";
+        document.getElementById("col3").value = d.c3 || "";
+        document.getElementById("col4").value = d.c4 || "";
+        document.getElementById("col5").value = d.c5 || "";
+      } catch (e) { console.error(e); }
+    } else {
+      document.getElementById("dateInput").value = "";
+      document.getElementById("cellNotes").value = "";
+      document.getElementById("col1").value = "";
+      document.getElementById("col2").value = "";
+      document.getElementById("col3").value = "";
+      document.getElementById("col4").value = "";
+      document.getElementById("col5").value = "";
+    }
+    calculate();
+    document.getElementById("saveStatus").innerText = "All changes saved";
+    document.getElementById("saveStatus").style.color = "#16a34a";
+  }
+
+  function markUnsaved() {
+    document.getElementById("saveStatus").innerText = "Unsaved changes...";
+    document.getElementById("saveStatus").style.color = "#d97706";
+  }
+
+  function clearPage() {
+    if (confirm("Are you sure you want to clear this page's entries?")) {
+      localStorage.removeItem(getStorageKey());
+      loadPageData();
+    }
+  }
+
+  // Column Width Functions
+  function toggleWidthToolbar() {
+    const tb = document.getElementById("widthToolbar");
+    tb.style.display = tb.style.display === "none" ? "block" : "none";
+  }
+
+  function updateColWidth(index, val) {
+    colWidths[index] = parseInt(val);
+    document.getElementById(`w${index}-val`).innerText = val + "px";
+    applyColWidths();
+    localStorage.setItem("col_widths", JSON.stringify(colWidths));
+  }
+
+  function applyColWidths() {
+    for (let i = 0; i < 6; i++) {
+      const col = document.getElementById(`col-${i}`);
+      if (col) col.style.width = colWidths[i] + "px";
+      const slider = document.getElementById(`slider-col-${i}`);
+      if (slider) slider.value = colWidths[i];
+      const valLabel = document.getElementById(`w${i}-val`);
+      if (valLabel) valLabel.innerText = colWidths[i] + "px";
+    }
+  }
+
+  function resetWidths() {
+    colWidths = [...defaultWidths];
+    localStorage.removeItem("col_widths");
+    applyColWidths();
+  }
+
+  function loadSavedSettings() {
+    const savedWidths = localStorage.getItem("col_widths");
+    if (savedWidths) {
+      try { colWidths = JSON.parse(savedWidths); } catch (e) {}
+    }
+    const savedFolder = localStorage.getItem("last_folder");
+    if (savedFolder) {
+      curFolder = savedFolder;
+      document.getElementById("folderSelect").value = curFolder;
+    }
+    const savedPage = localStorage.getItem("last_page");
+    if (savedPage) {
+      curPage = parseInt(savedPage) || 1;
+      document.getElementById("pageDisplay").innerText = curPage;
+    }
+  }
+
+  // Backup & Restore
+  function exportBackup() {
+    let backupData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      let key = localStorage.key(i);
+      if (key) backupData[key] = localStorage.getItem(key);
+    }
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `stitch_diary_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importBackup(evt) {
+    const file = evt.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const obj = JSON.parse(e.target.result);
+        for (let k in obj) {
+          localStorage.setItem(k, obj[k]);
+        }
+        alert("Backup successfully restored!");
+        loadSavedSettings();
+        loadPageData();
+      } catch (err) {
+        alert("Invalid backup JSON file.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // Danger Zone
+  function deleteCurrentFolder() {
+    if (confirm(`WARNING: Are you completely sure you want to permanently delete all data in ${curFolder}?`)) {
+      if (confirm(`Confirm second time: Delete ${curFolder} data permanently?`)) {
+        let keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          let k = localStorage.key(i);
+          if (k && k.startsWith(`${curFolder}_`)) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+        alert(`${curFolder} has been completely erased.`);
+        curPage = 1;
+        document.getElementById("pageDisplay").innerText = curPage;
+        loadPageData();
+      }
+    }
+  }
+
+  // Service Worker & Android PWA Installation
+  let deferredPrompt;
+  const installBanner = document.getElementById("install-banner");
+  const installBtn = document.getElementById("install-btn");
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBanner.style.display = "flex";
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        installBanner.style.display = "none";
+      }
+      deferredPrompt = null;
+    }
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js")
+        .then(() => console.log("Offline Service Worker Active"))
+        .catch(err => console.log("SW error:", err));
+    });
+  }
+</script>
+</body>
+</html>
